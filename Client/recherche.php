@@ -8,80 +8,80 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'client') {
 
 include '../connexion.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_voiture'])) {
-    $id_voiture = $_POST['id_voiture'];
-    $date_debut = $_POST['date_debut'];
-    $date_fin = $_POST['date_fin'];
-    $client_id = $_SESSION['user_id'];
+$message = '';
+$voitures_disponibles = [];
 
-    $sql_check = "
-        SELECT * FROM Voitures 
-        WHERE ID = :id_voiture
-        AND (
-            Disponibilite = 1 
-            OR (
-                Disponibilite = 0 
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Réservation d'une voiture
+    if (isset($_POST['id_voiture']) && !empty($_POST['id_voiture'])) {
+        $id_voiture = $_POST['id_voiture'];
+        $date_debut = $_POST['date_debut'];
+        $date_fin = $_POST['date_fin'];
+        $client_id = $_SESSION['user_id'];
+
+        $sql_check = "SELECT * FROM Voitures 
+            WHERE ID = :id_voiture
+                AND Disponibilite = 1
                 AND NOT EXISTS (
                     SELECT 1 FROM Reservations 
                     WHERE Reservations.Voiture_ID = Voitures.ID 
-                    AND ((Reservations.DateDebut <= :date_fin AND Reservations.DateFin >= :date_debut))
-                )
-            )
-        )";
-    
-    $stmt_check = $pdo->prepare($sql_check);
-    $stmt_check->bindParam(':id_voiture', $id_voiture);
-    $stmt_check->bindParam(':date_debut', $date_debut);
-    $stmt_check->bindParam(':date_fin', $date_fin);
-    $stmt_check->execute();
+                    AND (
+                        Reservations.DateDebut <= :date_fin 
+                        AND Reservations.DateFin >= :date_debut
+                    )
+                )";
 
-    if ($stmt_check->rowCount() > 0) {
-        $sql = "INSERT INTO Reservations (DateDebut, DateFin, Voiture_ID, Client_ID)
-                VALUES (:date_debut, :date_fin, :id_voiture, :client_id)";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':date_debut', $date_debut);
-        $stmt->bindParam(':date_fin', $date_fin);
-        $stmt->bindParam(':id_voiture', $id_voiture);
-        $stmt->bindParam(':client_id', $client_id);
+        $stmt_check = $pdo->prepare($sql_check);
+        $stmt_check->bindParam(':id_voiture', $id_voiture);
+        $stmt_check->bindParam(':date_debut', $date_debut);
+        $stmt_check->bindParam(':date_fin', $date_fin);
+        $stmt_check->execute();
 
-        if ($stmt->execute()) {
-            $sql_update = "UPDATE Voitures SET Disponibilite = 0 WHERE ID = :id_voiture";
-            $stmt_update = $pdo->prepare($sql_update);
-            $stmt_update->bindParam(':id_voiture', $id_voiture);
-            $stmt_update->execute();
+        if ($stmt_check->rowCount() > 0) {
+            $sql_insert = "INSERT INTO Reservations (DateDebut, DateFin, Voiture_ID, Client_ID)
+                           VALUES (:date_debut, :date_fin, :id_voiture, :client_id)";
+            $stmt_insert = $pdo->prepare($sql_insert);
+            $stmt_insert->bindParam(':date_debut', $date_debut);
+            $stmt_insert->bindParam(':date_fin', $date_fin);
+            $stmt_insert->bindParam(':id_voiture', $id_voiture);
+            $stmt_insert->bindParam(':client_id', $client_id);
 
-            $message = "<div class='alert alert-success mt-3'>Réservation effectuée avec succès.</div>";
+            if ($stmt_insert->execute()) {
+                $message = "<div class='alert alert-success mt-3'>Réservation effectuée avec succès.</div>";
+            } else {
+                $message = "<div class='alert alert-danger mt-3'>Une erreur s'est produite lors de la réservation.</div>";
+            }
         } else {
-            $message = "<div class='alert alert-danger mt-3'>Une erreur s'est produite lors de la réservation.</div>";
+            $message = "<div class='alert alert-warning mt-3'>La voiture sélectionnée n'est plus disponible.</div>";
         }
+    }
+    // Recherche des voitures disponibles
+    elseif (!empty($_POST['date_debut']) && !empty($_POST['date_fin'])) {
+        $date_debut = $_POST['date_debut'];
+        $date_fin = $_POST['date_fin'];
+
+        $sql_available = "SELECT * FROM Voitures 
+            WHERE Disponibilite = 1 
+            AND NOT EXISTS (
+                SELECT 1 FROM Reservations 
+                WHERE Reservations.Voiture_ID = Voitures.ID 
+                AND (
+                    Reservations.DateDebut <= :date_fin 
+                    AND Reservations.DateFin >= :date_debut
+                )
+            )";
+
+        $stmt_available = $pdo->prepare($sql_available);
+        $stmt_available->bindParam(':date_debut', $date_debut);
+        $stmt_available->bindParam(':date_fin', $date_fin);
+        $stmt_available->execute();
+        $voitures_disponibles = $stmt_available->fetchAll();
     } else {
-        $message = "<div class='alert alert-warning mt-3'>La voiture sélectionnée n'est plus disponible.</div>";
+        $message = "<div class='alert alert-danger mt-3'>Veuillez remplir les dates correctement.</div>";
     }
 }
-
-$voitures_disponibles = [];
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['id_voiture'])) {
-    $date_debut = $_POST['date_debut'];
-    $date_fin = $_POST['date_fin'];
-
-    $sql = "SELECT * FROM Voitures 
-        WHERE (Disponibilite = 1 
-               OR (Disponibilite = 0 
-                   AND NOT EXISTS (
-                       SELECT 1 FROM Reservations 
-                       WHERE Reservations.Voiture_ID = Voitures.ID 
-                       AND ((Reservations.DateDebut <= :date_fin AND Reservations.DateFin >= :date_debut))
-                   )
-               )
-        )";
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(':date_debut', $date_debut);
-    $stmt->bindParam(':date_fin', $date_fin);
-    $stmt->execute();
-    $voitures_disponibles = $stmt->fetchAll();
-}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="fr">

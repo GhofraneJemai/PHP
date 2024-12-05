@@ -1,9 +1,8 @@
 <?php
 session_start();
 
-// Vérification si l'utilisateur est bien un client
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'client') {
-    header('Location: login.php'); // Rediriger vers la page de connexion si l'utilisateur n'est pas un client
+    header('Location: login.php'); 
     exit();
 }
 
@@ -98,7 +97,7 @@ $client_name = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'Client'
     <div class="row">
 
         <!-- Main Content Area -->
-        <div class="col-md-9 ms-sm-auto col-lg-10 px-4 ml-5"> <!-- Ajout d'une marge gauche -->
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-4 ml-5"> 
             <h2 class="mt-4">Bienvenue, <?php echo ($client_name); ?>!</h2>
             <p>Voici un aperçu des options disponibles pour gérer vos réservations de voiture.</p>
 

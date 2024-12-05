@@ -1,40 +1,35 @@
 <?php
 session_start();
-include 'connexion.php'; // Connexion à la base de données
+include 'connexion.php'; 
 
-// Mot de passe de l'administrateur (en dur)
 $adminEmail = 'admin@example.com';
 $adminPassword = 'admin123';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Récupération des informations du formulaire
+    
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    // Vérifier si l'utilisateur est un administrateur
     if ($email === $adminEmail && $password === $adminPassword) {
-        // Si l'admin, on crée une session admin
         $_SESSION['user_email'] = $email;
         $_SESSION['user_role'] = 'admin';
-        $_SESSION['user_id'] = 1; // ID fictif pour l'administrateur
-        header('Location: admin/admin_dashboard.php');  // Rediriger vers le tableau de bord de l'admin
+        $_SESSION['user_id'] = 1; 
+        header('Location: admin/admin_dashboard.php'); 
         exit();
     }
 
-    // Vérifier les informations de connexion pour les autres utilisateurs (clients)
     $sql = "SELECT * FROM Clients WHERE Email = :email";
     $stmt = $pdo->prepare($sql);
     $stmt->bindParam(':email', $email);
     $stmt->execute();
     $client = $stmt->fetch();
 
-    // Vérification du mot de passe pour les autres utilisateurs
     if ($client && password_verify($password, $client['MotDePasse'])) {
         $_SESSION['user_id'] = $client['ID'];
         $_SESSION['user_name']= $client['Nom'];
         $_SESSION['user_email'] = $client['Email'];
         $_SESSION['user_role'] = 'client';
-        header('Location: Client/dashboard.php');  // Rediriger vers le tableau de bord du client
+        header('Location: Client/dashboard.php');
         exit();
     } else {
         $error = "Email ou mot de passe incorrect.";

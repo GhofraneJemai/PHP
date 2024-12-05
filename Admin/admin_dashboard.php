@@ -1,9 +1,8 @@
 <?php
 session_start();
 
-// Vérification si l'utilisateur est bien un administrateur
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    header('Location: login.php'); // Rediriger vers la page de connexion si l'utilisateur n'est pas admin
+    header('Location: login.php'); 
     exit();
 }
 ?>

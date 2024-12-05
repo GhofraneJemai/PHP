@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $NumeroTelephone = ($_POST['NumeroTelephone']);
     $Email = ($_POST['Email']);
     $MotDePasse = $_POST['MotDePasse'];
-    $_SESSION['user_role'] = 'client';
+    
     // Validation du nom
     if (empty($Nom)) {
         $errors[] = "Le nom est obligatoire.";
@@ -43,8 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (strlen($MotDePasse) < 6) {
         $errors[] = "Le mot de passe doit contenir au moins 6 caractères.";
     }
-
-    // Si aucune erreur, procéder à l'insertion
     if (empty($errors)) {
         $MotDePasseHashed = password_hash($MotDePasse, PASSWORD_DEFAULT);
 
@@ -58,9 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bindParam(':MotDePasse', $MotDePasseHashed);
 
         if ($stmt->execute()) {
-            $_SESSION['user_id'] = $client['ID'];
-            $_SESSION['user_name']= $client['Nom'];
-            $_SESSION['user_email'] = $client['Email'];
+            $lastId = $pdo->lastInsertId();
+            $_SESSION['user_id'] = $lastId;
+            $_SESSION['user_name'] = $Nom;
             $_SESSION['user_role'] = 'client';
             header('Location: Client/dashboard.php');
             exit();

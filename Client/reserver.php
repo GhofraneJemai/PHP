@@ -130,7 +130,6 @@ $reservations = $stmt->fetchAll();
                         <td><?php echo $reservation['DateFin']; ?></td>
                         <td>
                             <?php
-                            // Vérifier si la réservation est toujours valide (voiture réservée ou non)
                             $current_date = date('Y-m-d');
                             if ($reservation['DateFin'] < $current_date) {
                                 echo "Terminée";

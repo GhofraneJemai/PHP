@@ -9,12 +9,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ID'])) {
     if (isset($_POST['action']) && $_POST['action'] === 'afficher') {
         $sql = "SELECT * FROM Voitures WHERE ID = :ID";
         $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':ID', $ID, PDO::PARAM_INT);
+        $stmt->bindParam(':ID', $ID);
         $stmt->execute();
         $voiture = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$voiture) {
-            $errorMessage = "Aucune voiture trouvée avec l'ID " . $ID;
+            $errorMessage = "<div class='alert alert-danger mt-3'>Aucune voiture trouvée avec l'ID " . $ID . ".</div>";
+
         }
     }
 
@@ -23,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ID'])) {
         $Modele = $_POST['Modele'];
         $Annee = $_POST['Annee'];
         $Immatriculation = $_POST['Immatriculation'];
-        $Disponibilite = $_POST['Disponibilite']; // Directement récupéré de <select>
+        $Disponibilite = $_POST['Disponibilite']; 
 
         $sql = "UPDATE Voitures SET 
                     Marque = :Marque, 
@@ -34,18 +35,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ID'])) {
                 WHERE ID = :ID";
 
         $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':ID', $ID, PDO::PARAM_INT);
-        $stmt->bindParam(':Marque', $Marque, PDO::PARAM_STR);
-        $stmt->bindParam(':Modele', $Modele, PDO::PARAM_STR);
-        $stmt->bindParam(':Annee', $Annee, PDO::PARAM_INT);
-        $stmt->bindParam(':Immatriculation', $Immatriculation, PDO::PARAM_STR);
-        $stmt->bindParam(':Disponibilite', $Disponibilite, PDO::PARAM_INT);
+        $stmt->bindParam(':ID', $ID);
+        $stmt->bindParam(':Marque', $Marque);
+        $stmt->bindParam(':Modele', $Modele);
+        $stmt->bindParam(':Annee', $Annee);
+        $stmt->bindParam(':Immatriculation', $Immatriculation);
+        $stmt->bindParam(':Disponibilite', $Disponibilite);
 
         if ($stmt->execute()) {
-            echo "<div class='alert alert-success'>Voiture modifiée avec succès.</div>";
+            $message="<div class='alert alert-success'>Voiture modifiée avec succès.</div>";
         } else {
             $error = $stmt->errorInfo();
-            echo "<div class='alert alert-danger'>Erreur lors de la modification : " . $error[2] . "</div>";
+            $message= "<div class='alert alert-danger'>Erreur lors de la modification : " . $error[2] . "</div>";
         }
     }
 }
@@ -136,9 +137,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ID'])) {
 
 <div class="container mt-5">
     <h2 class="text-center">Modification d'une Voiture</h2>
-    <p>Veuillez remplir les champs suivants :</p>
 
-    <!-- Form to load car details by ID -->
+    <?php if (isset($message)) echo $message; ?>
+
+    <?php if ($errorMessage): ?>
+        <?php echo $errorMessage; ?>
+    <?php endif; ?>
+
     <form method="post" action="">
         <div class="mb-3">
             <label for="ID" class="form-label">ID :</label>
@@ -147,17 +152,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ID'])) {
         <input type="hidden" name="action" value="afficher">
         <button type="submit" class="btn btn-primary">Charger</button>
     </form>
+    <br>
 
-    <!-- Display error message if ID not found -->
-    <?php if ($errorMessage): ?>
-        <div class="alert alert-danger mt-3"><?php echo $errorMessage; ?></div>
-    <?php endif; ?>
-
-    <!-- Form to modify car details -->
     <?php if ($voiture): ?>
         <form method="post" action="" class="mt-4">
             <input type="hidden" name="ID" value="<?php echo $voiture['ID']; ?>">
-            <input type="hidden" name="action" value="modifier">
 
             <div class="mb-3">
                 <label for="Marque" class="form-label">Marque :</label>
@@ -182,6 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ID'])) {
                     <option value="0" <?php echo ($voiture['Disponibilite'] == 0) ? 'selected' : ''; ?>>Non disponible</option>
                 </select>
             </div>
+            <input type="hidden" name="action" value="modifier">
             <button type="submit" class="btn btn-success">Modifier</button>
         </form>
     <?php endif; ?>

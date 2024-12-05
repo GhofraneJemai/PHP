@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ID'])) {
     if (isset($_POST['action']) && $_POST['action'] === 'afficher') {
         $sql = "SELECT * FROM Voitures WHERE ID = :ID";
         $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':ID', $ID, PDO::PARAM_INT);
+        $stmt->bindParam(':ID', $ID);
         $stmt->execute();
         $voiture = $stmt->fetch(PDO::FETCH_ASSOC);
         
@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ID'])) {
         }
     }
 
-    if (isset($_POST['action']) && $_POST['action'] === 'supprimer' && $voiture) {
+    if (isset($_POST['action']) && $_POST['action'] === 'supprimer' ) {
         $sql = "DELETE FROM Voitures WHERE ID = :ID";
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(':ID', $ID);
@@ -130,7 +130,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ID'])) {
     <?php endif; ?>
 
     <div class="form-container mt-4">
-        <!-- Form to search for car by ID -->
         <form method="post">
             <div class="mb-3">
                 <label for="ID" class="form-label">ID de la Voiture :</label>
@@ -142,7 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ID'])) {
     </div>
 
     <?php if ($voiture): ?>
-        <!-- Form to confirm deletion of the car -->
         <div class="mt-4">
             <form method="post">
                 <input type="hidden" name="ID" value="<?php echo $voiture['ID']; ?>">
