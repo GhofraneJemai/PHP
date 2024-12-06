@@ -99,7 +99,7 @@ session_start(); // Démarre la session
                         <div class="p-3" style="max-width: 900px;">
                         <h4 class="text-white text-uppercase mb-md-3">Louez une voiture</h4>
                         <h1 class="display-1 text-white mb-md-4">Les meilleures voitures de location dans votre région</h1>
-                        <a href="" class="btn btn-primary py-md-3 px-md-5 mt-2">Réserver maintenant</a>
+                        <a href="login.php" class="btn btn-primary py-md-3 px-md-5 mt-2">Réserver maintenant</a>
                         </div>
                     </div>
                 </div>

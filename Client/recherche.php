@@ -10,8 +10,19 @@ include '../connexion.php';
 
 $message = '';
 $voitures_disponibles = [];
+$recherche_effectuee = false;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $date_debut = $_POST['date_debut'];
+    $date_fin = $_POST['date_fin'];
+    $today = date('Y-m-d');
+
+    // Vérification des dates
+    if ($date_debut < $today) {
+        $message = "<div class='alert alert-danger mt-3'>La date de début ne peut pas être antérieure à aujourd'hui.</div>";
+    } elseif ($date_debut > $date_fin) {
+        $message = "<div class='alert alert-danger mt-3'>La date de début doit être avant la date de fin.</div>";
+    } else {
     // Réservation d'une voiture
     if (isset($_POST['id_voiture']) && !empty($_POST['id_voiture'])) {
         $id_voiture = $_POST['id_voiture'];
@@ -75,10 +86,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt_available->bindParam(':date_debut', $date_debut);
         $stmt_available->bindParam(':date_fin', $date_fin);
         $stmt_available->execute();
+        $recherche_effectuee = true;
         $voitures_disponibles = $stmt_available->fetchAll();
     } else {
         $message = "<div class='alert alert-danger mt-3'>Veuillez remplir les dates correctement.</div>";
     }
+}
 }
 ?>
 
@@ -214,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <?php endforeach; ?>
             </tbody>
         </table>
-    <?php else: ?>
+    <?php elseif ($recherche_effectuee ): ?>
         <p class="no-results">Aucune voiture disponible pour ces dates.</p>
     <?php endif; ?>
 </div>

@@ -1,5 +1,6 @@
 <?php
 include '../connexion.php';
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $Marque = $_POST['Marque'];
     $Modele = $_POST['Modele'];
@@ -13,12 +14,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->bindParam(':Modele', $Modele);
     $stmt->bindParam(':Annee', $Annee);
     $stmt->bindParam(':Immatriculation', $Immatriculation);
-    if ($stmt->execute()) {
+    try {
+        $stmt->execute();
         $message = "<div class='alert alert-success mt-3'>Voiture ajoutée avec succès.</div>";
-    } else {
-        $message = "<div class='alert alert-danger mt-3'>Erreur lors de l'ajout.</div>";
+    } catch (PDOException $e) {
+        if ($e->getCode() == 23000) { 
+            $message = "<div class='alert alert-danger mt-3'>Erreur : L'immatriculation est déjà utilisée.</div>";
+        } else {
+            $message = "<div class='alert alert-danger mt-3'>Erreur : " . ($e->getMessage()) . "</div>";
+        }
     }
 }
+$sql = "SELECT * FROM Voitures";
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+$voitures = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -132,6 +142,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         </form>
     </div>
+    <h2 class="text-center">Liste des Voitures</h2>
+
+    <!-- Afficher la liste des voitures -->
+    <table class="table table-bordered mt-4">
+        <thead>
+            <tr>
+                <th>Marque</th>
+                <th>Modèle</th>
+                <th>Année</th>
+                <th>Immatriculation</th>
+                <th>Disponibilite</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($voitures as $voiture) { ?>
+                <tr>
+                    <td><?php echo ($voiture['Marque']); ?></td>
+                    <td><?php echo ($voiture['Modele']); ?></td>
+                    <td><?php echo ($voiture['Annee']); ?></td>
+                    <td><?php echo ($voiture['Immatriculation']); ?></td>
+                    <td><?php echo ($voiture['Disponibilite']); ?></td>
+                </tr>
+            <?php } ?>
+        </tbody>
+    </table>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

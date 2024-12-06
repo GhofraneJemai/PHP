@@ -1,15 +1,32 @@
 <?php 
 session_start();
-
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'client') {
     header('Location: login.php'); 
     exit();
 }
-
 $client_id = $_SESSION['user_id'];
 
 include '../connexion.php';
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['reservation_id'])) {
+        $reservation_id = $_POST['reservation_id'];
+
+        include '../connexion.php';
+
+        $sql = "DELETE FROM Reservations WHERE ID = :reservation_id AND Client_ID = :client_id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':reservation_id', $reservation_id);
+        $stmt->bindParam(':client_id', $_SESSION['user_id']);
+
+        if ($stmt->execute()) {
+            $_SESSION['message'] = "Réservation supprimée avec succès.";
+        } else {
+            $_SESSION['error'] = "Erreur lors de la suppression de la réservation.";
+        }
+    }
+}
+else{
 $sql = "
     SELECT Reservations.ID AS reservation_id, Voitures.Marque, Voitures.Modele, 
            Reservations.DateDebut, Reservations.DateFin 
@@ -24,6 +41,7 @@ $stmt->bindParam(':client_id', $client_id);
 $stmt->execute();
 
 $reservations = $stmt->fetchAll();
+}
 ?>
 
 <!DOCTYPE html>
@@ -120,6 +138,7 @@ $reservations = $stmt->fetchAll();
                     <th>Date de début</th>
                     <th>Date de fin</th>
                     <th>Statut</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -138,11 +157,17 @@ $reservations = $stmt->fetchAll();
                             }
                             ?>
                         </td>
+                        <td>
+                            <form method="POST" action="" onsubmit="return confirm('Voulez-vous vraiment supprimer cette réservation ?');">
+                                <input type="hidden" name="reservation_id" value="<?php echo $reservation['reservation_id']; ?>">
+                                <button type="submit" class="btn btn-danger">Supprimer</button>
+                            </form>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
-    <?php else: ?>
+    <?php elseif ($_SERVER['REQUEST_METHOD'] === 'POST'): ?>
         <p class="alert alert-info">Vous n'avez aucune réservation en cours.</p>
     <?php endif; ?>
 </div>
